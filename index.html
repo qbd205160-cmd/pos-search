@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام تتبع أجهزة POS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction:rtl;min-height:100vh}
+.hdr{background:linear-gradient(135deg,#0d1424,#111827);border-bottom:1px solid #1e293b;padding:16px 24px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 20px rgba(59,130,246,.35);flex-shrink:0}
+.htitle{font-size:17px;font-weight:800;color:#f1f5f9}
+.hsub{font-size:11px;color:#475569;margin-top:1px}
+.modes{margin-right:auto;display:flex;gap:5px;flex-wrap:wrap}
+.mb{padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid #1e293b;background:transparent;color:#475569;font-family:'Tajawal',sans-serif;transition:all .15s}
+.mb.on{background:rgba(59,130,246,.18);border-color:#3b82f6;color:#93c5fd}
+.wrap{max-width:800px;margin:0 auto;padding:28px 16px}
+.sbar{background:#0d1424;border:1px solid #1e3a5f;border-radius:14px;padding:20px;margin-bottom:22px;box-shadow:0 4px 24px rgba(0,0,0,.5)}
+.slabel{font-size:11px;color:#475569;margin-bottom:8px}
+.srow{display:flex;gap:9px}
+.sinput{flex:1;padding:12px 15px;border-radius:9px;background:#060a12;border:1px solid #1e3a5f;color:#e2e8f0;font-size:15px;outline:none;font-family:'Tajawal',sans-serif;direction:rtl;transition:border-color .2s}
+.sinput:focus{border-color:#3b82f6}
+.sinput::placeholder{color:#334155}
+.sbtn{padding:12px 22px;border-radius:9px;border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;white-space:nowrap;background:linear-gradient(135deg,#3b82f6,#1d4ed8);box-shadow:0 0 16px rgba(59,130,246,.4);transition:all .2s}
+.sbtn:disabled{background:#1e3a5f;box-shadow:none;cursor:not-allowed}
+.lbar{margin-top:12px;padding:9px 13px;background:rgba(59,130,246,.07);border-radius:7px;border:1px solid rgba(59,130,246,.2);font-size:12px;color:#60a5fa;display:none;align-items:center;gap:7px}
+.lbar.on{display:flex}
+.stbar{background:#0d1424;border:1px solid #1e3a5f;border-radius:9px;padding:10px 16px;margin-bottom:18px;font-size:12px;color:#475569;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.dot.ok{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.dot.err{background:#ef4444}
+.dot.ld{background:#fbbf24;animation:pulse 1s infinite}
+.sumbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:9px 14px;background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:9px;font-size:12px;color:#60a5fa}
+.tcnt{margin-right:auto;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:2px 9px;font-size:11px;color:#93c5fd}
+.card{background:#0d1424;border:1px solid #1e3a5f;border-radius:14px;overflow:hidden;margin-bottom:14px;box-shadow:0 3px 20px rgba(0,0,0,.4)}
+.ch{padding:14px 20px;background:linear-gradient(90deg,rgba(59,130,246,.12),transparent);border-bottom:1px solid #1e3a5f;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cicon{font-size:22px;flex-shrink:0}
+.cname{font-size:16px;font-weight:800;color:#f1f5f9}
+.cmeta{font-size:11px;color:#475569;margin-top:2px}
+.bdgs{display:flex;gap:7px;flex-wrap:wrap;margin-right:auto}
+.bdg{padding:3px 11px;border-radius:18px;font-size:11px;font-weight:700}
+.bnew{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);color:#93c5fd}
+.vb{padding:9px 20px;background:rgba(59,130,246,.05);border-bottom:1px solid #1e293b;font-size:12px;color:#7dd3fc}
+.grid{padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ib{background:#060a12;border:1px solid #1e293b;border-radius:8px;padding:9px 12px}
+.ib.hl{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.3)}
+.ib.s2{grid-column:1/-1}
+.il{font-size:10px;color:#475569;margin-bottom:3px}
+.iv{font-size:13px;color:#cbd5e1;word-break:break-all}
+.iv.b{color:#60a5fa;font-weight:700}.iv.g{color:#4ade80}.iv.r{color:#f87171}.iv.y{color:#fbbf24}
+.nb{margin:0 20px 16px;padding:11px 14px;background:#060a12;border-radius:9px;border:1px solid #1e293b}
+.nl{font-size:10px;color:#475569;margin-bottom:5px}
+.nt{font-size:12px;color:#cbd5e1;line-height:1.8}
+.cf{padding:9px 20px;border-top:1px solid #0f172a;font-size:10px;color:#334155;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px}
+.hbtn{width:100%;padding:9px;border-radius:9px;background:transparent;border:1px solid #1e3a5f;color:#475569;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif;margin-bottom:9px;transition:all .15s}
+.hbtn:hover{border-color:#3b82f6;color:#60a5fa}
+.hi{background:#0d1424;border:1px solid #1e293b;border-radius:10px;margin-bottom:8px;padding:11px 16px}
+.hr{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.hn{font-size:13px;font-weight:700;color:#e2e8f0}
+.hm{font-size:11px;color:#475569}
+.hno{font-size:11px;color:#64748b;margin-top:5px;line-height:1.7}
+.empty{text-align:center;padding:50px 20px;background:#0d1424;border-radius:14px;border:1px dashed #1e3a5f}
+.errbox{background:#1a0808;border:1px solid #5a1414;border-radius:11px;padding:13px 16px;margin-bottom:18px;color:#f87171;font-size:13px;display:none}
+.init{text-align:center;padding:56px 20px}
+.s-n{background:#0a2a1a;border:1px solid #1a6a3a;color:#4ade80}
+.s-j{background:#0a1a2a;border:1px solid #1a4a8a;color:#60a5fa}
+.s-w{background:#2a1a0a;border:1px solid #6a4a1a;color:#fbbf24}
+.s-d{background:#1a2a0a;border:1px solid #3a6a1a;color:#86efac}
+.s-x{background:#1a1a2a;border:1px solid #3a3a5a;color:#94a3b8}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sp{width:12px;height:12px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-left:5px}
+@media(max-width:580px){.grid{grid-template-columns:1fr}.hdr{padding:12px 14px}.wrap{padding:18px 10px}.modes{width:100%}}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div class="logo">🖨</div>
+  <div><div class="htitle">نظام تتبع أجهزة POS</div><div class="hsub">dashboard · stock · sim 55</div></div>
+  <div class="modes">
+    <button class="mb on" onclick="setMode('r')" id="br">🏪 مطعم</button>
+    <button class="mb" onclick="setMode('d')" id="bd">🖥️ جهاز</button>
+    <button class="mb" onclick="setMode('s')" id="bs">📶 سيم</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="stbar">
+    <div class="dot ld" id="stDot"></div>
+    <span id="stMsg">جاري تحميل البيانات...</span>
+    <button onclick="loadAll()" style="margin-right:auto;padding:3px 10px;border-radius:5px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:#60a5fa;font-size:10px;cursor:pointer;font-family:'Tajawal',sans-serif">🔄 تحديث</button>
+  </div>
+  <div class="sbar">
+    <div class="slabel" id="slbl">🏪 اسم المطعم</div>
+    <div class="srow">
+      <input class="sinput" id="si" placeholder="مثال: دجاج ابو غيث، فايكنك..." onkeydown="if(event.key==='Enter')go()"/>
+      <button class="sbtn" id="sbtn" onclick="go()">🔍 بحث</button>
+    </div>
+    <div class="lbar" id="lb"><span class="sp"></span><span>جاري البحث...</span></div>
+  </div>
+  <div class="errbox" id="eb"></div>
+  <div id="res"><div class="init"><div style="font-size:50px;margin-bottom:14px">🖨️</div><div style="font-size:14px;color:#334155;margin-bottom:6px">ابحث عن أي مطعم أو جهاز أو سيم كارت</div><div style="font-size:11px;color:#1e293b">يقرأ مباشرة من Google Sheets</div></div></div>
+</div>
+<script>
+var DASH='1TnlxGwD0G6FV654bFCbXmjL4Ek59IGJWkAYYlb_GD7w';
+var STOCK='1ZOB4rHFil99StMeaCPm59lDT4vnLkaksY2d-ZszC-t0';
+var SIM55='1Fwyln1_-ogHjvfnoQnI2tdXTWGRosThZofgjWU2TSl8';
+var DB={dash:[],stock:[],sim55:[]},loaded=false,mode='r';
+
+async function gviz(id){
+  var url='https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json';
+  var r=await fetch(url);
+  var t=await r.text();
+  var j=JSON.parse(t.replace(/^[^(]+\(/,'').replace(/\);?\s*$/,''));
+  var cols=j.table.cols.map(function(c){return c.label||c.id||'';});
+  return (j.table.rows||[]).map(function(r){
+    var o={};
+    (r.c||[]).forEach(function(cell,i){o[cols[i]]=cell&&cell.v!=null?String(cell.v).trim():'';});
+    return o;
+  }).filter(function(r){return Object.values(r).some(function(v){return v;});});
+}
+
+async function loadAll(){
+  setStatus('ld','جاري تحميل البيانات...');
+  try{
+    DB.dash=await gviz(DASH);
+    try{DB.stock=await gviz(STOCK);}catch(e){DB.stock=[];}
+    try{DB.sim55=await gviz(SIM55);}catch(e){DB.sim55=[];}
+    loaded=true;
+    setStatus('ok','جاهز — '+DB.dash.length+' تاسك · '+DB.stock.length+' جهاز · آخر تحديث: '+new Date().toLocaleTimeString('ar'));
+  }catch(e){setStatus('err','فشل التحميل: '+e.message);}
+}
+
+function setStatus(s,m){
+  var d=document.getElementById('stDot');
+  d.className='dot '+(s==='ok'?'ok':s==='err'?'err':'ld');
+  document.getElementById('stMsg').textContent=m;
+}
+function ss(a,b){a=(a||'').toLowerCase().replace(/\s+/g,' ').trim();b=(b||'').toLowerCase().replace(/\s+/g,' ').trim();if(a===b)return 1;if(!a||!b)return 0;if(a.includes(b)||b.includes(a))return 0.9;var wa=a.split(' '),wb=b.split(' '),ws={};wa.forEach(function(w){ws[w]=1;});var com=wb.filter(function(w){return w.length>1&&ws[w];}).length;if(com>0)return 0.65+com/Math.max(wa.length,wb.length)*0.25;var lo=a.length>b.length?a:b,sh=a.length>b.length?b:a,c=[];for(var i=0;i<=sh.length;i++){var lv=i;for(var j=1;j<=lo.length;j++){if(i===0){c[j]=j;continue;}var nv=c[j-1];if(sh[i-1]!==lo[j-1])nv=Math.min(Math.min(nv,lv),c[j])+1;c[j-1]=lv;lv=nv;}c[lo.length]=lv;}return(lo.length-c[lo.length])/lo.length;}
+function pd(s){s=(s||'').trim();var m=s.match(/(\d+)\/(\d+)\/(\d+)/);if(!m)return new Date(0);var t=s.match(/(\d+):(\d+)/);return new Date(parseInt(m[3]),parseInt(m[2])-1,parseInt(m[1]),t?parseInt(t[1]):0,t?parseInt(t[2]):0);}
+function cv(r){for(var i=1;i<arguments.length;i++){var k=arguments[i];if(r[k]!==undefined&&r[k]!=='')return r[k];}return'';}
+function go(){var q=document.getElementById('si').value.trim();if(!q)return;if(!loaded){loadAll().then(function(){if(loaded)go();});return;}hideErr();showLoad(true);setTimeout(function(){if(mode==='r')byR(q);else if(mode==='d')byD(q);else byS(q);showLoad(false);},10);}
+function byR(q){var scored=DB.dash.filter(function(r){return cv(r,'اسم المطعم');}).map(function(r){return{r:r,name:cv(r,'اسم المطعم'),sc:ss(cv(r,'اسم المطعم'),q)};}).filter(function(x){return x.sc>0.35;}).sort(function(a,b){return b.sc-a.sc;});if(!scored.length){noRes(q);return;}var best=scored[0],thr=Math.max(0.5,best.sc*0.72);var tasks=scored.filter(function(x){return x.sc>=thr;}).map(function(x){return x.r;}).sort(function(a,b){return pd(cv(b,'submittedAt'))-pd(cv(a,'submittedAt'));});renderCards(tasks[0],tasks,best.sc<0.88?'تم مطابقة "'+best.name+'" مع "'+q+'" ('+Math.round(best.sc*100)+'% تشابه)':'');}
+function byD(q){var ql=(q||'').toLowerCase().trim();var tasks=DB.dash.filter(function(r){var d=(cv(r,'رقم جهاز POS')||'').toLowerCase();return d&&(d.includes(ql)||ql.includes(d.substring(0,8)));}).sort(function(a,b){return pd(cv(b,'submittedAt'))-pd(cv(a,'submittedAt'));});var sm=DB.stock.filter(function(r){var v=(cv(r,'vs','VS')||'').toLowerCase();return v&&(v.includes(ql)||ql.includes(v.substring(0,8)));});if(tasks.length)renderCards(tasks[0],tasks,sm.length?'في stock: '+cv(sm[0],'rest name','REST NAME'):'');else if(sm.length)document.getElementById('res').innerHTML='<div class="empty"><div style="font-size:38px;margin-bottom:10px">📦</div><div style="color:#475569">الجهاز في المخزن — لا توجد تاسكات</div><div style="color:#334155;font-size:11px;margin-top:6px">'+cv(sm[0],'rest name','REST NAME')+'</div></div>';else noRes(q);}
+function byS(q){var nq=(q||'').replace(/\s/g,'').replace(/^964/,'');var tasks=DB.dash.filter(function(r){var s=(cv(r,'رقم SIM كارت POS')||'').replace(/\s/g,'').replace(/^964/,'');return s&&s.length>5&&s.slice(-9)===nq.slice(-9);}).sort(function(a,b){return pd(cv(b,'submittedAt'))-pd(cv(a,'submittedAt'));});var sm=DB.sim55.filter(function(r){var n=(cv(r,'ارقام')||'').replace(/\s/g,'').replace(/^964/,'');return n&&n.slice(-9)===nq.slice(-9);});if(tasks.length)renderCards(tasks[0],tasks,sm.length?'في sim55: '+cv(sm[0],'اسم المطعم'):'');else if(sm.length)document.getElementById('res').innerHTML='<div class="empty"><div style="font-size:38px;margin-bottom:10px">📶</div><div style="color:#475569">'+cv(sm[0],'اسم المطعم')+'</div></div>';else noRes(q);}
+function vi(r){r=r||'';return r.includes('صيانة')?'🔧':r.includes('توزيع')?'📦':r.includes('تعويض')||r.includes('تبديل')?'🔄':r.includes('جديد')?'🆕':r.includes('استعلام')?'❓':r.includes('حساب')?'💰':'📋';}
+function sc2(s){var m={'نشط':'s-n','جديد':'s-j','انتظار':'s-w','مكتمل':'s-d'};return m[s]||'s-x';}
+function ib(ico,lbl,val,cls,sp){if(!val||val==='—'||val===''||['1','2','3','9'].indexOf((val||'').trim())>=0)return'';var vc=val==='4G'?'g':val==='غير فعال'?'r':val==='3G'?'y':'';return'<div class="ib '+(cls?'hl':'')+(sp?' s2':'')+'"><div class="il">'+ico+' '+lbl+'</div><div class="iv '+(cls||vc)+'">'+val+'</div></div>';}
+function renderCards(t,tasks,note){
+var name=cv(t,'اسم المطعم'),addr=cv(t,'العنوان'),dev=cv(t,'رقم جهاز POS'),sim2=cv(t,'رقم SIM كارت POS'),reason=cv(t,'سبب الزيارة'),pos=cv(t,'جهاز POS'),simst=cv(t,'حالة SIM'),maint=cv(t,'صيانة POS'),notes=cv(t,'ملاحظات'),tech=cv(t,'اسم الموظف المسؤول'),status=cv(t,'status'),date=cv(t,'submittedAt'),callc=cv(t,'هل التاسك عن طريق الكول سنتر'),comp=cv(t,'منافس'),lock=cv(t,'قفل الاعدادات'),id=cv(t,'id');
+var h='<div class="sumbar">✅ وُجد '+tasks.length+' تاسك للمطعم "'+name+'"'+(tasks.length>1?'<span class="tcnt">'+tasks.length+' تاسك</span>':'')+'</div><div class="card"><div class="ch"><div class="cicon">'+vi(reason)+'</div><div style="flex:1"><div class="cname">'+name+'</div><div class="cmeta">📍'+addr+' · 📅'+date+' · 👤'+tech+'</div></div><div class="bdgs"><span class="bdg '+sc2(status)+'">'+(status||'—')+'</span><span class="bdg bnew">⚡آخر تاسك</span></div></div>'+(reason?'<div class="vb">'+vi(reason)+' سبب الزيارة: <strong>'+reason+'</strong>'+(callc?' <span style="color:#64748b;margin-right:10px">| كول سنتر: '+callc+'</span>':'')+'</div>':'')+'<div class="grid">'+ib('🖥️','رقم الجهاز POS',dev,'b')+ib('📶','رقم السيم',sim2)+ib('📡','حالة السيم',simst)+ib('🔧','نوع الصيانة',maint)+ib('🖨️','نوع الجهاز',pos)+ib('🔒','قفل الإعدادات',lock)+(comp&&comp!=='—'?ib('📱','المنافس',comp,'',true):'')+'</div>'+(notes&&notes.trim()&&notes!=='—'?'<div class="nb"><div class="nl">📝 ملاحظات الفني</div><div class="nt">'+notes+'</div></div>':'')+'<div class="cf"><span>🆔'+id+'</span>'+(note?'<span style="color:#f59e0b">⚠️'+note+'</span>':'')+'</div></div>';
+if(tasks.length>1){h+='<button class="hbtn" onclick="tgl(this)">▼ التاسكات السابقة ('+(tasks.length-1)+')</button><div id="hl" style="display:none">';for(var i=1;i<tasks.length;i++){var ht=tasks[i],hn=cv(ht,'اسم المطعم'),hd=cv(ht,'submittedAt'),hte=cv(ht,'اسم الموظف المسؤول'),hdev=cv(ht,'رقم جهاز POS'),hsm=cv(ht,'رقم SIM كارت POS'),hrs=cv(ht,'سبب الزيارة'),hnt=cv(ht,'ملاحظات'),hst=cv(ht,'status');var dok=hdev&&['1','2','3','VB',''].indexOf(hdev.trim())<0;var sok=hsm&&hsm.length>5&&['1','2','3'].indexOf(hsm.trim())<0;h+='<div class="hi"><div class="hr"><span>'+vi(hrs)+'</span><span class="hn">'+hn+'</span><span class="hm">📅'+hd+'</span><span class="hm">👤'+hte+'</span>'+(dok?'<span style="font-size:11px;color:#60a5fa">🖥️'+hdev+'</span>':'')+(sok?'<span style="font-size:11px;color:#94a3b8">📶'+hsm+'</span>':'')+'<span class="bdg '+sc2(hst)+'" style="margin-right:auto;padding:2px 9px;border-radius:14px;font-size:10px">'+(hst||'')+'</span></div>'+(hnt&&hnt.trim()&&hnt!=='—'?'<div class="hno">'+vi(hrs)+' '+(hrs||'')+' — '+hnt+'</div>':'')+'</div>';}h+='</div>';}
+document.getElementById('res').innerHTML=h;}
+function tgl(btn){var l=document.getElementById('hl');if(l.style.display==='none'){l.style.display='block';btn.textContent='▲ إخفاء التاسكات السابقة';}else{l.style.display='none';btn.textContent='▼ التاسكات السابقة ('+l.children.length+')';}}
+function noRes(q){document.getElementById('res').innerHTML='<div class="empty"><div style="font-size:40px;margin-bottom:10px">🔍</div><div style="color:#475569;font-size:14px">لا نتائج لـ "<span style="color:#60a5fa">'+q+'</span>"</div><div style="color:#334155;font-size:11px;margin-top:6px">جرب جزء من الاسم أو تغيير الكتابة</div></div>';}
+function showLoad(v){document.getElementById('lb').className='lbar'+(v?' on':'');document.getElementById('sbtn').disabled=v;document.getElementById('sbtn').innerHTML=v?'<span class="sp"></span>جاري...':'🔍 بحث';}
+function hideErr(){document.getElementById('eb').style.display='none';}
+function setMode(m){mode=m;['r','d','s'].forEach(function(x){document.getElementById('b'+x).classList.remove('on');});document.getElementById('b'+m).classList.add('on');var cfg={r:{l:'🏪 اسم المطعم',p:'مثال: دجاج ابو غيث، فايكنك...'},d:{l:'🖥️ رقم الجهاز VS',p:'مثال: VE10261X00642'},s:{l:'📶 رقم السيم',p:'مثال: 7873890544'}};document.getElementById('slbl').textContent=cfg[m].l;document.getElementById('si').placeholder=cfg[m].p;document.getElementById('si').focus();}
+loadAll();
+</script>
+</body>
+</html>
