@@ -199,11 +199,11 @@ function vi(r){r=r||'';return r.includes('صيانة')?'🔧':r.includes('توز
 
 // ── Detect search type ────────────────────────────────────────
 function detectMode(q){
-  var ql=q.trim();
-  // رقم جهاز أو prefix جهاز - يبدأ بـ V
-  if(/^(ve|vb|vs|vn|vt|pe)/i.test(ql))return 'd';
+  var ql=(q||'').trim().toLowerCase();
+  // رقم جهاز - يبدأ بـ V أو P
+  if(/^v/.test(ql)||/^pe/.test(ql))return 'd';
   // رقم سيم (أرقام فقط)
-  if(/^[0-9]{7,}$/.test(ql.replace(/\s/g,'')))return 's';
+  if(/^[0-9]{7,}$/.test(ql.replace(/[^0-9]/g,'')))return 's';
   return 'r';
 }
 
@@ -303,8 +303,8 @@ function byR(q){
 
 // ── By device — prefix search (vs, vb, ve...) ────────────────
 function byD(q){
-  var ql=q.toLowerCase().trim();
-  var isPrefix=/^(ve|vb|vs|vn|vt|pe)$/i.test(ql.trim());
+  var ql=(q||'').trim().toLowerCase();
+  var isPrefix=ql.length>=2&&ql.length<=4&&/^v[a-z]{1,3}$/i.test(ql.trim());
 
   var matched=[];
 
