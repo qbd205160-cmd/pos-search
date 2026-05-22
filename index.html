@@ -311,17 +311,27 @@ function byD(q){
   if(isPrefix){
     // كل الأجهزة التي تبدأ بهذا البريفكس
     var seen={};
+    // جمع من كل المصادر
     DB.dash.forEach(function(r){
-      var d=cv(r,'رقم جهاز POS');
-      if(d&&d.toLowerCase().startsWith(ql)&&!seen[d]){seen[d]=true;matched.push({dev:d,name:cv(r,'اسم المطعم'),sim:cv(r,'رقم SIM كارت POS'),date:cv(r,'submittedAt'),status:cv(r,'status'),src:'dash',row:r});}
+      var d=(cv(r,'رقم جهاز POS')||'').trim();
+      if(d&&d.toLowerCase().indexOf(ql)===0&&!seen[d.toUpperCase()]){
+        seen[d.toUpperCase()]=true;
+        matched.push({dev:d,name:cv(r,'اسم المطعم'),sim:cv(r,'رقم SIM كارت POS'),date:cv(r,'submittedAt'),status:cv(r,'status'),src:'dashboard',row:r});
+      }
     });
     DB.tvf.forEach(function(r){
-      var d=cv(r,'رقم الجهاز');
-      if(d&&d.toLowerCase().startsWith(ql)&&!seen[d]){seen[d]=true;matched.push({dev:d,name:cv(r,'اسم الوظف'),sim:cv(r,'رقم السم كارت'),date:cv(r,'Timestamp'),status:'',src:'tvf',row:r});}
+      var d=(cv(r,'رقم الجهاز')||'').trim();
+      if(d&&d.toLowerCase().indexOf(ql)===0&&!seen[d.toUpperCase()]){
+        seen[d.toUpperCase()]=true;
+        matched.push({dev:d,name:cv(r,'اسم الوظف'),sim:cv(r,'رقم السم كارت'),date:cv(r,'Timestamp'),status:cv(r,'اخراج صيانة'),src:'TVF',row:r});
+      }
     });
     DB.stock.forEach(function(r){
-      var v=cv(r,'vs','VS');
-      if(v&&v.toLowerCase().startsWith(ql)&&!seen[v]){seen[v]=true;matched.push({dev:v,name:cv(r,'rest name','REST NAME'),sim:cv(r,'MSISDN','msid'),date:'',status:cv(r,'status'),src:'stock',row:r});}
+      var v=(cv(r,'vs','VS')||'').trim();
+      if(v&&v.toLowerCase().indexOf(ql)===0&&!seen[v.toUpperCase()]){
+        seen[v.toUpperCase()]=true;
+        matched.push({dev:v,name:cv(r,'rest name','REST NAME'),sim:cv(r,'MSISDN','msid'),date:'',status:cv(r,'status'),src:'stock',row:r});
+      }
     });
     if(!matched.length){noRes(q);return;}
     renderDeviceList(matched,q);
