@@ -327,10 +327,21 @@ function byD(q){
       }
     });
     DB.stock.forEach(function(r){
-      var v=(cv(r,'vs','VS')||'').trim();
-      if(v&&v.toLowerCase().indexOf(ql)===0&&!seen[v.toUpperCase()]){
+      // البحث في كل قيم الصف لإيجاد رقم الجهاز
+      var v='';
+      Object.keys(r).forEach(function(k){
+        var val=(r[k]||'').trim();
+        if(!v&&val&&val.toLowerCase().indexOf(ql)===0&&val.length>4&&/^[a-z]{2}/i.test(val)){
+          v=val;
+        }
+      });
+      if(!v){var vv=(cv(r,'vs','VS',Object.values(r).find(function(x){return x&&String(x).toLowerCase().indexOf(ql)===0;})||'')||'').trim();if(vv&&vv.toLowerCase().indexOf(ql)===0)v=vv;}
+      if(v&&!seen[v.toUpperCase()]){
         seen[v.toUpperCase()]=true;
-        matched.push({dev:v,name:cv(r,'rest name','REST NAME'),sim:cv(r,'MSISDN','msid'),date:'',status:cv(r,'status'),src:'stock',row:r});
+        var nm=cv(r,'rest name','REST NAME')||'';
+        var sm=cv(r,'msid','MSISDN','')||'';
+        var st=cv(r,'status','')||'';
+        matched.push({dev:v,name:nm,sim:sm,date:'',status:st,src:'stock',row:r});
       }
     });
     if(!matched.length){noRes(q);return;}
