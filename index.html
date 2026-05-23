@@ -130,7 +130,10 @@ async function loadAll(){
   setStatus('ld','جاري تحميل البيانات...');
   try{
     setLMsg('تحميل dashboard...');
-    DB.dash=await gviz(DASH);
+    var dash1=await gviz(DASH);
+    var dash2=[];
+    try{dash2=await gviz(DASH,'ورقة1');}catch(e){}
+    DB.dash=dash1.concat(dash2);
     
     // تحميل كل شيتات TVF
     DB.tvf5=[];DB.tvf4=[];
@@ -288,8 +291,9 @@ function nd(d){return(d||'').toLowerCase().replace(/[\s\-]/g,'');}
 function ns(s){return(s||'').replace(/\s/g,'').replace(/^00964/,'').replace(/^964/,'').replace(/^0/,'').slice(-9);}
 function pd(s){
   if(!s)return new Date(0);
+  s=String(s);
   var ar={'٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9'};
-  s=s.replace(/[٠-٩]/g,function(d){return ar[d];}).replace(/\u200f/g,'').trim();
+  s=s.replace(/[٠-٩]/g,function(d){return ar[d];}).replace(/‏/g,'').replace(/[،,]/g,' ').trim();
   var m=s.match(/(\d+)\/(\d+)\/(\d+)/);if(!m)return new Date(0);
   var t=s.match(/(\d+):(\d+)/),h=t?parseInt(t[1]):0,mn=t?parseInt(t[2]):0;
   var y=parseInt(m[3]),mo=parseInt(m[2]),d=parseInt(m[1]);
@@ -486,7 +490,7 @@ function searchByName(q){
   
   // إضافة TVF5 عبر رقم الجهاز
   branches.forEach(function(br){
-    br.dash.sort(function(a,b){return pd(cv(b,'submittedAt'))-pd(cv(a,'submittedAt'));});
+    br.dash.sort(function(a,b){return pd(String(cv(b,'submittedAt')))-pd(String(cv(a,'submittedAt')));});
     var devs={},sims={};
     br.dash.forEach(function(t){
       var d=nd(cv(t,'رقم جهاز POS'));if(d&&d.length>4)devs[d]=true;
