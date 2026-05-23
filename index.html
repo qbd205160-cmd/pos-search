@@ -11,6 +11,7 @@
 
 
 
+
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction:rtl;min-height:100vh}
@@ -78,11 +79,24 @@ body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction
 
 
 
+
 </style>
 </head>
 <body>
 
 <script>
+// مسح كل الـ cache القديم
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){r.unregister();});
+  });
+}
+if('caches' in window){
+  caches.keys().then(function(names){
+    names.forEach(function(n){caches.delete(n);});
+  });
+}
+
 var DASH='1TnlxGwD0G6FV654bFCbXmjL4Ek59IGJWkAYYlb_GD7w';
 var TVF_ID='11iL-WTrWcw9hSn5YD6i1LvLnczMrFu0HInjXmBUCFmo';
 var STOCK='1ZOB4rHFil99StMeaCPm59lDT4vnLkaksY2d-ZszC-t0';
@@ -1047,6 +1061,7 @@ function installApp(){
 }
 
 // ── PWA Install ─────────────────────────────────────────────────
+
 loadAll();
 </script>
 </body>
