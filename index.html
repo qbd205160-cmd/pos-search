@@ -2,11 +2,10 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="POS Tracker">
 <meta name="theme-color" content="#07090f">
 <link rel="manifest" href="manifest.json">
 <title>نظام تتبع أجهزة POS</title>
@@ -84,20 +83,45 @@ body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction
     <div style="font-size:52px;margin-bottom:16px">🖨️</div>
     <div style="font-size:19px;font-weight:800;color:#f1f5f9;margin-bottom:6px">نظام تتبع أجهزة POS</div>
     <div style="font-size:11px;color:#475569;margin-bottom:26px">أدخل كلمة المرور للمتابعة</div>
-    <input id="PI" type="password" placeholder="••••••••"
-      style="width:100%;padding:14px 16px;border-radius:10px;background:#060a12;border:2px solid #1e3a5f;color:#e2e8f0;font-size:18px;outline:none;text-align:center;margin-bottom:14px;direction:ltr;letter-spacing:4px;box-sizing:border-box"
+    <input id="PI" type="password" placeholder="كلمة المرور"
+      style="width:100%;padding:14px;border-radius:10px;background:#060a12;border:2px solid #1e3a5f;color:#e2e8f0;font-size:18px;outline:none;text-align:center;margin-bottom:14px;direction:ltr;box-sizing:border-box"
       onkeydown="if(event.key==='Enter')LP()"/>
     <button onclick="LP()"
-      style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif">
-      دخول →
+      style="width:100%;padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:Tajawal,sans-serif">
+      دخول
     </button>
-    <div id="PE" style="color:#f87171;font-size:12px;margin-top:12px;display:none;padding:8px;background:rgba(239,68,68,.1);border-radius:7px">⚠️ كلمة المرور غير صحيحة</div>
+    <div id="PE" style="color:#f87171;font-size:12px;margin-top:10px;display:none">كلمة المرور غير صحيحة</div>
   </div>
 </div>
 
-<!-- التطبيق الرئيسي -->
+<!-- التطبيق -->
 <div id="APP" style="display:none">
+
+</div>
+
 <script>
+// ── PASSWORD ─────────────────────────────────────────────────
+function LP(){
+  var v=document.getElementById('PI').value;
+  if(v==='10020020'){
+    document.getElementById('LS').style.display='none';
+    document.getElementById('APP').style.display='block';
+    try{sessionStorage.setItem('X','1');}catch(e){}
+    if(!loaded)loadAll();
+  }else{
+    document.getElementById('PE').style.display='block';
+    document.getElementById('PI').value='';
+  }
+}
+(function(){
+  try{
+    if(sessionStorage.getItem('X')==='1'){
+      document.getElementById('LS').style.display='none';
+      document.getElementById('APP').style.display='block';
+    }
+  }catch(e){}
+})();
+
 var DASH='1TnlxGwD0G6FV654bFCbXmjL4Ek59IGJWkAYYlb_GD7w';
 var TVF_ID='11iL-WTrWcw9hSn5YD6i1LvLnczMrFu0HInjXmBUCFmo';
 var STOCK='1ZOB4rHFil99StMeaCPm59lDT4vnLkaksY2d-ZszC-t0';
@@ -1078,47 +1102,11 @@ if('serviceWorker' in navigator){
   }).catch(function(e){console.log('SW error',e);});
 }
 
-
-// ═══════════════════════════════════════════
-// LOGIN - كلمة المرور: 10020020
-// ═══════════════════════════════════════════
-var AUTH_DONE = false;
-
-function LP() {
-  var val = document.getElementById('PI').value;
-  // Check password using char codes
-  var ok = [49,48,48,50,48,48,50,48];
-  var match = val.length === ok.length;
-  if (match) {
-    for (var i = 0; i < ok.length; i++) {
-      if (val.charCodeAt(i) !== ok[i]) { match = false; break; }
-    }
-  }
-  if (match) {
-    document.getElementById('LS').style.display = 'none';
-    document.getElementById('APP').style.display = 'block';
-    try { sessionStorage.setItem('POS_OK', '1'); } catch(e) {}
-    if (!loaded) loadAll();
-  } else {
-    document.getElementById('PE').style.display = 'block';
-    document.getElementById('PI').value = '';
-    document.getElementById('PI').focus();
-  }
-}
-
-// Check session on load
-(function() {
-  try {
-    if (sessionStorage.getItem('POS_OK') === '1') {
-      var ls = document.getElementById('LS');
-      if (ls) ls.style.display = 'none';
-      var app = document.getElementById('APP');
-      if (app) app.style.display = 'block';
-      loadAll();
-    }
-  } catch(e) {}
-})();
-
+// PWA
+var deferredPrompt;
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;var b=document.getElementById('installBtn');if(b)b.style.display='flex';});
+function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(function(){deferredPrompt=null;});}}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
 </script>
 </body>
 </html>
