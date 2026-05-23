@@ -165,6 +165,8 @@ async function loadAll(){
     setLMsg('تحميل file (ICCID/MSISDN)...');
     try{DB.file=await gviz(FILE_ID);}catch(e){DB.file=[];}
     
+    // بناء خريطة ICCID->MSISDN
+    buildFileMap();
     // بناء قاعدة بيانات الأجهزة
     buildDeviceDB();
     
@@ -172,6 +174,47 @@ async function loadAll(){
     var tvfTotal=DB.tvf5.length+DB.tvf4.length;
     setStatus('ok','جاهز — '+DB.dash.length+' dashboard · '+tvfTotal+' TVF · '+DB.stock.length+' stock · '+DB.sim55.length+' sim55 · '+DB.file.length+' file');
   }catch(e){setStatus('err','فشل: '+e.message);}
+}
+
+// ── Build ICCID->MSISDN lookup map ───────────────────────────
+var ICCID_MAP={};
+function buildFileMap(){
+  ICCID_MAP={};
+  DB.file.forEach(function(r){
+    var iccid=String(cv(r,'ICCID')||'').replace(/\D/g,'').trim();
+    var msisdn=String(cv(r,'MSISDN')||'').replace(/\D/g,'').trim();
+    // Also handle NO_HEADER rows where col0=ICCID col1=MSISDN
+    if(!iccid){
+      var keys=Object.keys(r).filter(function(k){return k!=='_cols';});
+      if(keys.length>=2){
+        var v0=String(r[keys[0]]||'').replace(/\D/g,'');
+        var v1=String(r[keys[1]]||'').replace(/\D/g,'');
+        if(v0.length>10&&v1.length>=9&&v1.length<=12){iccid=v0;msisdn=v1;}
+      }
+    }
+    if(iccid&&msisdn){
+      ICCID_MAP[iccid]=msisdn;
+      // Also map last 11 digits for partial matching
+      if(iccid.length>11)ICCID_MAP[iccid.slice(-11)]=msisdn;
+      if(iccid.length>9)ICCID_MAP[iccid.slice(-9)]=msisdn;
+    }
+  });
+  console.log('ICCID map built:', Object.keys(ICCID_MAP).length, 'entries');
+}
+
+// Convert any number to MSISDN if it's an ICCID
+function toMSISDN(val){
+  if(!val)return val;
+  var clean=String(val).replace(/\D/g,'');
+  // If it's already a short number (MSISDN), return as-is
+  if(clean.length<=12&&clean.length>=9)return clean;
+  // If it's long (ICCID), look up MSISDN
+  if(clean.length>12){
+    if(ICCID_MAP[clean])return ICCID_MAP[clean];
+    if(ICCID_MAP[clean.slice(-11)])return ICCID_MAP[clean.slice(-11)];
+    if(ICCID_MAP[clean.slice(-9)])return ICCID_MAP[clean.slice(-9)];
+  }
+  return val; // return original if not found
 }
 
 // ── Build device database ─────────────────────────────────────
@@ -491,15 +534,13 @@ function searchByDevice(q){
 
 // ── Search by SIM ─────────────────────────────────────────────
 function searchBySim(q){
-  // Check if q is ICCID - convert to MSISDN first
-  var cleanQ=String(q).replace(/\D/g,'');
+  // Convert ICCID to MSISDN if needed
+  var cleanQ=String(q).replace(/[^0-9]/g,'');
   if(cleanQ.length>12){
-    var converted=iccidToMsisdn(cleanQ);
-    if(converted){
-      // Show the converted number info
-      var fileRow=DB.file.find(function(r){return String(cv(r,'ICCID')||'').replace(/\D/g,'').slice(-12)===cleanQ.slice(-12);});
-      document.getElementById('si').value=converted;
-      searchBySim(converted);
+    var msisdn=toMSISDN(cleanQ);
+    if(msisdn&&msisdn!==cleanQ){
+      document.getElementById('si').value=msisdn;
+      searchBySim(msisdn);
       return;
     }
   }
@@ -575,7 +616,7 @@ function renderDeviceList(matched,prefix){
      +'<div style="flex:1"><div class="brn">🖥️ '+m.dev+'</div>'
      +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:3px">'
      +(m.name?'<span class="brm">🏪 '+m.name+'</span>':'')
-     +(m.sim&&m.sim.length>5?'<span class="brm">📶 '+m.sim+'</span>':'')
+     +(m.sim&&m.sim.length>5?'<span class="brm">📶 '+toMSISDN(m.sim)+'</span>':'')
      +(m.date?'<span class="brm">📅 '+m.date+'</span>':'')
      +(m.status?'<span class="bdg '+scBdg(m.status)+'">'+m.status+'</span>':'')
      +'<span class="brm" style="color:#334155">📁 '+m.src+'</span>'
@@ -614,6 +655,7 @@ function renderDevCard(br){
   
   var mDev=br.dev||(t?cv(t,'رقم جهاز POS'):tv4?cv(tv4,'POS number'):tv5?findDevInRow(tv5):'');
   var mSim=br.sim||(t?cv(t,'رقم SIM كارت POS'):tv5?cv(tv5,'رقم السم كارت'):tv4?cv(tv4,'SIM number'):'');
+  mSim=toMSISDN(mSim);
   var mName=br.name||(t?cv(t,'اسم المطعم'):tv4?cv(tv4,'اسم المطعم'):si?cv(si,'اسم المطعم'):'');
   var mAddr=t?cv(t,'العنوان'):tv4?cv(tv4,'الموقع'):'';
   var mStatus=t?cv(t,'status'):st?cv(st,'status'):'';
@@ -677,7 +719,7 @@ function renderDevCard(br){
     if(pulled&&pulled.trim())h+='<div style="font-size:10px;color:#f87171;margin-top:2px">🔄 اخراج صيانة: '+pulled+'</div>';
     if(tn)h+='<div class="hn">📝 '+tn+'</div>';
     h+='</div>';
-    if(br.tvf5.length>1){var tid2='t_'+Math.random().toString(36).substr(2,5);h+='<button class="hbtn" style="border-color:rgba(139,92,246,.2)" onclick="tgl(this,\''+tid2+'\')">▼ باقي سجلات TVF ('+(br.tvf5.length-1)+')</button><div id="'+tid2+'" style="display:none">';for(var k=1;k<br.tvf5.length;k++){var tr=br.tvf5[k];h+='<div class="hi" style="border-color:rgba(139,92,246,.15)"><div class="hr"><span>'+vi(cv(tr,'توزيع /راجاع'))+'</span><span style="font-size:10px;color:#475569">📅'+cv(tr,'Timestamp')+'</span><span style="font-size:10px;color:#c4b5fd">🖥️'+findDevInRow(tr)+'</span><span style="font-size:10px;color:#94a3b8">📶'+cv(tr,'رقم السم كارت')+'</span></div>'+(cv(tr,'اخراج صيانة')?'<div style="font-size:10px;color:#f87171;margin-top:2px">🔄 '+cv(tr,'اخراج صيانة')+'</div>':'')+(cv(tr,'ملاحظة')?'<div class="hn">'+cv(tr,'ملاحظة')+'</div>':'')+'</div>';}h+='</div>';}
+    if(br.tvf5.length>1){var tid2='t_'+Math.random().toString(36).substr(2,5);h+='<button class="hbtn" style="border-color:rgba(139,92,246,.2)" onclick="tgl(this,\''+tid2+'\')">▼ باقي سجلات TVF ('+(br.tvf5.length-1)+')</button><div id="'+tid2+'" style="display:none">';for(var k=1;k<br.tvf5.length;k++){var tr=br.tvf5[k];h+='<div class="hi" style="border-color:rgba(139,92,246,.15)"><div class="hr"><span>'+vi(cv(tr,'توزيع /راجاع'))+'</span><span style="font-size:10px;color:#475569">📅'+cv(tr,'Timestamp')+'</span><span style="font-size:10px;color:#c4b5fd">🖥️'+findDevInRow(tr)+'</span><span style="font-size:10px;color:#94a3b8">📶'+toMSISDN(cv(tr,'رقم السم كارت'))+'</span></div>'+(cv(tr,'اخراج صيانة')?'<div style="font-size:10px;color:#f87171;margin-top:2px">🔄 '+cv(tr,'اخراج صيانة')+'</div>':'')+(cv(tr,'ملاحظة')?'<div class="hn">'+cv(tr,'ملاحظة')+'</div>':'')+'</div>';}h+='</div>';}
   }
   
   // Stock
@@ -720,6 +762,7 @@ function renderRestCard(br){
   
   var mDev=t?cv(t,'رقم جهاز POS'):tv4?cv(tv4,'POS number'):'';
   var mSim=t?cv(t,'رقم SIM كارت POS'):tv4?cv(tv4,'SIM number'):si?cv(si,'ارقام'):'';
+  mSim=toMSISDN(mSim);
   var mStatus=t?cv(t,'status'):'';
   var mDate=t?cv(t,'submittedAt'):tv4?cv(tv4,'كرل دايت'):'';
   var mTech=t?cv(t,'اسم الموظف المسؤول'):tv4?cv(tv4,'اسم الموظف'):'';
