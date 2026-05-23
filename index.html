@@ -877,7 +877,30 @@ function tgl(btn,id){var l=document.getElementById(id);if(!l)return;if(l.style.d
 function noRes(q){document.getElementById('res').innerHTML='<div class="empty"><div style="font-size:38px;margin-bottom:8px">🔍</div><div style="color:#475569;font-size:13px">لا نتائج لـ "<span style="color:#60a5fa">'+q+'</span>"</div><div style="color:#334155;font-size:11px;margin-top:5px">جرب كتابة جزء من الاسم أو رقم الجهاز كاملاً</div></div>';}
 function showLoad(v){document.getElementById('lb').className='lbar'+(v?' on':'');document.getElementById('sbtn').disabled=v;document.getElementById('sbtn').innerHTML=v?'<span class="sp"></span>جاري...':'🔍 بحث';}
 
-loadAll();
+// ── Login ─────────────────────────────────────────────────────
+function checkPass(){
+  var input=document.getElementById('passInput').value;
+  if(input===atob('MTAwMjAwMjA=')){
+    document.getElementById('loginScreen').style.display='none';
+    try{sessionStorage.setItem('pos_auth','1');}catch(e){}
+    loadAll();
+  } else {
+    document.getElementById('passErr').style.display='block';
+    document.getElementById('passInput').value='';
+    document.getElementById('passInput').focus();
+  }
+}
+
+// Auto-login if session exists
+(function(){
+  try{
+    if(sessionStorage.getItem('pos_auth')==='1'){
+      var ls=document.getElementById('loginScreen');
+      if(ls)ls.style.display='none';
+      loadAll();
+    }
+  }catch(e){}
+})();
 
 // ── Install app ──────────────────────────────────────────────
 function installApp(){
