@@ -132,11 +132,24 @@ async function loadAll(){
     setLMsg('تحميل dashboard...');
     DB.dash=await gviz(DASH);
     
-    setLMsg('تحميل TVF شيت 5...');
-    try{DB.tvf5=await gviz(TVF_ID,'Form Responses 5');}catch(e){DB.tvf5=[];}
-    
-    setLMsg('تحميل TVF شيت 4...');
-    try{DB.tvf4=await gviz(TVF_ID,'Form Responses 4');}catch(e){DB.tvf4=[];}
+    // تحميل كل شيتات TVF
+    DB.tvf5=[];DB.tvf4=[];
+    var tvfSheets=[
+      {name:'Form Responses 1',type:'r5'},
+      {name:'Form Responses 2',type:'r5'},
+      {name:'Form Responses 4',type:'r4'},
+      {name:'Sheet6',type:'r5'},
+      {name:'Sheet7',type:'r5'},
+      {name:'Sheet8',type:'r5'}
+    ];
+    for(var si2=0;si2<tvfSheets.length;si2++){
+      setLMsg('تحميل TVF: '+tvfSheets[si2].name+'...');
+      try{
+        var rows=await gviz(TVF_ID,tvfSheets[si2].name);
+        if(tvfSheets[si2].type==='r4'){DB.tvf4=DB.tvf4.concat(rows);}
+        else{DB.tvf5=DB.tvf5.concat(rows);}
+      }catch(e){}
+    }
     
     setLMsg('تحميل stock...');
     try{DB.stock=await gviz(STOCK);}catch(e){DB.stock=[];}
@@ -149,7 +162,7 @@ async function loadAll(){
     
     loaded=true;
     var tvfTotal=DB.tvf5.length+DB.tvf4.length;
-    setStatus('ok','جاهز — '+DB.dash.length+' dashboard · '+tvfTotal+' TVF · '+DB.stock.length+' stock · '+DB.sim55.length+' sim55');
+    setStatus('ok','جاهز — '+DB.dash.length+' dashboard · '+tvfTotal+' TVF(6 شيت) · '+DB.stock.length+' stock · '+DB.sim55.length+' sim55');
   }catch(e){setStatus('err','فشل: '+e.message);}
 }
 
