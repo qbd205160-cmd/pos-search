@@ -126,8 +126,8 @@ var SIM55='1Fwyln1_-ogHjvfnoQnI2tdXTWGRosThZofgjWU2TSl8';
 var DB={dash:[],tvf:[],stock:[],sim55:[]},loaded=false,mode='r';
 
 // ── Load ─────────────────────────────────────────────────────
-async function gviz(id){
-  var url='https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json';
+async function gviz(id,sheet){
+  var url='https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json'+(sheet?'&sheet='+encodeURIComponent(sheet):'');
   var r=await fetch(url);var t=await r.text();
   var j=JSON.parse(t.replace(/^[^(]+\(/,'').replace(/\);?\s*$/,''));
   var cols=j.table.cols.map(function(c){return(c.label||c.id||'').trim();});
@@ -141,7 +141,17 @@ async function loadAll(){
   setStatus('ld','جاري تحميل البيانات...');
   try{
     setLMsg('تحميل dashboard...');DB.dash=await gviz(DASH);
-    setLMsg('تحميل TVF...');try{DB.tvf=await gviz(TVF);}catch(e){DB.tvf=[];}
+    setLMsg('تحميل TVF...');
+    try{
+      var tvf1=await gviz(TVF,'Form Responses 5');
+      var tvf2=[];
+      try{tvf2=await gviz(TVF,'Form Responses 4');}catch(e){}
+      var tvf3=[];
+      try{tvf3=await gviz(TVF,'Form Responses 3');}catch(e){}
+      var tvf4=[];
+      try{tvf4=await gviz(TVF,'Form Responses 2');}catch(e){}
+      DB.tvf=tvf1.concat(tvf2).concat(tvf3).concat(tvf4);
+    }catch(e){DB.tvf=[];}
     setLMsg('تحميل stock...');try{DB.stock=await gviz(STOCK);}catch(e){DB.stock=[];}
     setLMsg('تحميل sim55...');try{DB.sim55=await gviz(SIM55);}catch(e){DB.sim55=[];}
     loaded=true;
@@ -193,6 +203,17 @@ function pd(s){
 
 function cv(r){for(var i=1;i<arguments.length;i++){var k=arguments[i];if(r&&r[k]!==undefined&&r[k]!=='')return r[k];}return'';}
 function nd(d){return(d||'').toLowerCase().replace(/[\s\-]/g,'');}
+function getDevFromRow(r){
+  return cv(r,'رقم جهاز POS','POS number','رقم الجهاز','vs','VS','جهاز POS','Pos number')||
+    Object.values(r).find(function(v){return v&&/^V[BSE]/i.test(String(v).trim());}) ||'';
+}
+function getSimFromRow(r){
+  return cv(r,'رقم SIM كارت POS','SIM number','رقم السم كارت','MSISDN','msid','رقم السيم')||
+    Object.values(r).find(function(v){var s=String(v||'').replace(/\D/g,'');return s.length>=9&&s.length<=13;})||'';
+}
+function getNameFromRow(r){
+  return cv(r,'اسم المطعم','REST NAME','rest name')||'';
+}
 function ns(s){return(s||'').replace(/\s/g,'').replace(/^00964/,'').replace(/^964/,'').replace(/^0/,'').slice(-9);}
 function scBdg(s){var m={'نشط':'s-n','جديد':'s-j','انتظار':'s-w','مكتمل':'s-n','Active':'s-n','active':'s-n','live':'s-n'};return m[s]||'s-x';}
 function vi(r){r=r||'';return r.includes('صيانة')?'🔧':r.includes('توزيع')?'📦':r.includes('تعويض')||r.includes('تبديل')?'🔄':r.includes('جديد')?'🆕':r.includes('راجع')?'↩️':r.includes('استعلام')?'❓':'📋';}
