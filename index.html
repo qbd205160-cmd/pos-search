@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#07090f">
 <link rel="manifest" href="manifest.json">
-<title>نظام تتبع أجهزة POS</title>
+<title>POS Tracker</title>
 <style>
+
 
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 *{box-sizing:border-box;margin:0;padding:0}
@@ -74,34 +74,54 @@ body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction
 .sp{width:11px;height:11px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle;margin-left:4px}
 @media(max-width:580px){.sum-grid{grid-template-columns:1fr 1fr}.hdr{padding:11px 13px}.wrap{padding:14px 10px}}
 
+
 </style>
 </head>
-<body style="margin:0;padding:0">
-
+<body>
 <div id="LS" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#07090f;z-index:9999;display:flex;align-items:center;justify-content:center">
-<div style="background:#0d1424;border:1px solid #1e3a5f;border-radius:16px;padding:40px 28px;width:300px;text-align:center">
-<div style="font-size:50px;margin-bottom:14px">🖨️</div>
+<div style="background:#0d1424;border:1px solid #1e3a5f;border-radius:16px;padding:36px 24px;width:290px;text-align:center">
+<div style="font-size:48px;margin-bottom:14px">🖨️</div>
 <div style="font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px">نظام تتبع أجهزة POS</div>
-<div style="font-size:11px;color:#475569;margin-bottom:22px">أدخل كلمة المرور</div>
-<input id="PI" type="password"
-  style="width:100%;padding:13px;border-radius:9px;background:#060a12;border:2px solid #1e3a5f;color:#e2e8f0;font-size:20px;text-align:center;margin-bottom:12px;box-sizing:border-box;outline:none"
-  placeholder="••••••••"
-  onkeyup="if(event.keyCode==13||event.which==13)document.getElementById('LB').click()">
-<button id="LB"
-  style="width:100%;padding:14px;border-radius:9px;border:none;background:#3b82f6;color:#fff;font-size:16px;font-weight:700;cursor:pointer"
-  onclick="var v=document.getElementById('PI').value;if(v=='10020020'){document.getElementById('LS').style.display='none';document.getElementById('APP').style.display='block';try{sessionStorage.setItem('ok','1');}catch(e){}if(!window.loaded)loadAll();}else{document.getElementById('PE').style.display='block';document.getElementById('PI').value='';}">
-  دخول
-</button>
+<div style="font-size:11px;color:#475569;margin-bottom:22px">أدخل كلمة المرور للمتابعة</div>
+<input id="PI" type="password" placeholder="كلمة المرور"
+  style="width:100%;padding:13px;border-radius:9px;background:#060a12;border:2px solid #1e3a5f;color:#e2e8f0;font-size:18px;text-align:center;margin-bottom:12px;box-sizing:border-box;outline:none;-webkit-appearance:none">
+<button id="LB" style="width:100%;padding:14px;border-radius:9px;border:none;background:#3b82f6;color:#fff;font-size:16px;font-weight:700;cursor:pointer">دخول</button>
 <div id="PE" style="color:#f87171;font-size:12px;margin-top:10px;display:none">كلمة المرور غير صحيحة</div>
 </div>
 </div>
-
 <div id="APP" style="display:none">
 </div>
 </div>
-
 <script>
-try{if(sessionStorage.getItem('ok')==='1'){document.getElementById('LS').style.display='none';document.getElementById('APP').style.display='block';}}catch(e){}
+(function(){
+  // Login
+  function doLogin(){
+    var v = document.getElementById("PI").value;
+    if(v === "10020020"){
+      document.getElementById("LS").style.display = "none";
+      document.getElementById("APP").style.display = "block";
+      try{ sessionStorage.setItem("ok","1"); }catch(e){}
+      loadAll();
+    } else {
+      document.getElementById("PE").style.display = "block";
+      document.getElementById("PI").value = "";
+    }
+  }
+  
+  document.getElementById("LB").addEventListener("click", doLogin);
+  document.getElementById("PI").addEventListener("keyup", function(e){
+    if(e.keyCode === 13) doLogin();
+  });
+  
+  // Auto session
+  try{
+    if(sessionStorage.getItem("ok") === "1"){
+      document.getElementById("LS").style.display = "none";
+      document.getElementById("APP").style.display = "block";
+      loadAll();
+    }
+  }catch(e){}
+})();
 
 var DASH='1TnlxGwD0G6FV654bFCbXmjL4Ek59IGJWkAYYlb_GD7w';
 var TVF_ID='11iL-WTrWcw9hSn5YD6i1LvLnczMrFu0HInjXmBUCFmo';
@@ -1089,8 +1109,6 @@ var deferredPrompt;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;});
 function installApp(){if(deferredPrompt){deferredPrompt.prompt();}}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-
-if(sessionStorage.getItem('ok')==='1')loadAll();
 </script>
 </body>
 </html>
