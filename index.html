@@ -96,7 +96,8 @@ body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction
       🏪 اسم مطعم: <span style="color:#e2e8f0">فولكينو</span> أو <span style="color:#e2e8f0">هاديز</span><br>
       🖥️ كل أجهزة VS: <span style="color:#e2e8f0">VS</span> &nbsp;|&nbsp; كل أجهزة VB: <span style="color:#e2e8f0">VB</span> &nbsp;|&nbsp; كل أجهزة VE: <span style="color:#e2e8f0">VE</span><br>
       🔢 جهاز محدد: <span style="color:#e2e8f0">VB53221C20316</span><br>
-      📶 رقم سيم: <span style="color:#e2e8f0">7873890544</span>
+      📶 رقم سيم: <span style="color:#e2e8f0">7873890544</span><br>
+      🔢 ICCID: <span style="color:#e2e8f0">008857254475</span> ← يحوله تلقائياً لرقم السيم
     </div>
   </div>
 </div>
@@ -105,10 +106,11 @@ var DASH='1TnlxGwD0G6FV654bFCbXmjL4Ek59IGJWkAYYlb_GD7w';
 var TVF_ID='11iL-WTrWcw9hSn5YD6i1LvLnczMrFu0HInjXmBUCFmo';
 var STOCK='1ZOB4rHFil99StMeaCPm59lDT4vnLkaksY2d-ZszC-t0';
 var SIM55='1Fwyln1_-ogHjvfnoQnI2tdXTWGRosThZofgjWU2TSl8';
+var FILE_ID='1m6AHs66KJ5RbvQUu5vvM0HGmNalMwElS7LBlk8yVEJA';
 
 // كل بيانات المطاعم المجمعة من كل الشيتات
 var RESTAURANTS={};// key=device, value={name,sim,email,status,date,tech,note,op,src}
-var DB={dash:[],tvf5:[],tvf4:[],stock:[],sim55:[]};
+var DB={dash:[],tvf5:[],tvf4:[],stock:[],sim55:[],file:[]};
 var loaded=false;
 
 // ── Load GViz ────────────────────────────────────────────────
@@ -160,12 +162,15 @@ async function loadAll(){
     setLMsg('تحميل sim55...');
     try{DB.sim55=await gviz(SIM55);}catch(e){DB.sim55=[];}
     
+    setLMsg('تحميل file (ICCID/MSISDN)...');
+    try{DB.file=await gviz(FILE_ID);}catch(e){DB.file=[];}
+    
     // بناء قاعدة بيانات الأجهزة
     buildDeviceDB();
     
     loaded=true;
     var tvfTotal=DB.tvf5.length+DB.tvf4.length;
-    setStatus('ok','جاهز — '+DB.dash.length+' dashboard · '+tvfTotal+' TVF(6 شيت) · '+DB.stock.length+' stock · '+DB.sim55.length+' sim55');
+    setStatus('ok','جاهز — '+DB.dash.length+' dashboard · '+tvfTotal+' TVF · '+DB.stock.length+' stock · '+DB.sim55.length+' sim55 · '+DB.file.length+' file');
   }catch(e){setStatus('err','فشل: '+e.message);}
 }
 
@@ -280,6 +285,32 @@ function findDevInRow(r){
 }
 
 // ── Helpers ───────────────────────────────────────────────────
+// ── ICCID to MSISDN lookup ───────────────────────────────────
+function iccidToMsisdn(iccid){
+  if(!iccid)return '';
+  iccid=String(iccid).replace(/\D/g,'');
+  var last12=iccid.slice(-12);
+  for(var i=0;i<DB.file.length;i++){
+    var r=DB.file[i];
+    var ic=String(cv(r,'ICCID')||'').replace(/\D/g,'');
+    if(ic&&(ic===iccid||ic.slice(-12)===last12||iccid.slice(-12)===ic.slice(-12))){
+      return cv(r,'MSISDN')||'';
+    }
+  }
+  return '';
+}
+
+function msisdnFromAny(val){
+  // If val looks like ICCID (>12 digits), convert to MSISDN
+  if(!val)return val;
+  var clean=String(val).replace(/\D/g,'');
+  if(clean.length>12){
+    var msisdn=iccidToMsisdn(clean);
+    if(msisdn)return msisdn;
+  }
+  return val;
+}
+
 function cv(r){
   for(var i=1;i<arguments.length;i++){
     var k=arguments[i];
@@ -344,13 +375,19 @@ function search(q){
   var isDevPrefix=/^v[bse]$/i.test(ql);
   // هل هو رقم جهاز كامل؟
   var isDevFull=/^v[bse]/i.test(ql)&&ql.length>4;
+  // هل هو ICCID (أكثر من 12 رقم)؟
+  var cleanNum=ql.replace(/[^0-9]/g,'');
+  var isICCID=cleanNum.length>12;
   // هل هو رقم سيم؟
-  var isSimNum=/^[0-9]{7,}$/.test(ql.replace(/[^0-9]/g,''))&&ql.replace(/[^0-9]/g,'').length>=9;
+  var isSimNum=!isICCID&&/^[0-9]{7,}$/.test(cleanNum)&&cleanNum.length>=9;
   
   if(isDevPrefix){
     searchByPrefix(ql);
   } else if(isDevFull){
     searchByDevice(ql);
+  } else if(isICCID){
+    // ICCID - convert to MSISDN
+    searchBySim(cleanNum);
   } else if(isSimNum){
     searchBySim(ql);
   } else {
@@ -454,6 +491,18 @@ function searchByDevice(q){
 
 // ── Search by SIM ─────────────────────────────────────────────
 function searchBySim(q){
+  // Check if q is ICCID - convert to MSISDN first
+  var cleanQ=String(q).replace(/\D/g,'');
+  if(cleanQ.length>12){
+    var converted=iccidToMsisdn(cleanQ);
+    if(converted){
+      // Show the converted number info
+      var fileRow=DB.file.find(function(r){return String(cv(r,'ICCID')||'').replace(/\D/g,'').slice(-12)===cleanQ.slice(-12);});
+      document.getElementById('si').value=converted;
+      searchBySim(converted);
+      return;
+    }
+  }
   var nq=ns(q);
   var dashR=DB.dash.filter(function(r){return ns(cv(r,'رقم SIM كارت POS'))===nq;}).sort(function(a,b){return pd(cv(b,'submittedAt'))-pd(cv(a,'submittedAt'));});
   var tvf5R=DB.tvf5.filter(function(r){return ns(cv(r,'رقم السم كارت'))===nq;}).sort(function(a,b){return pd(cv(b,'Timestamp'))-pd(cv(a,'Timestamp'));});
