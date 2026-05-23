@@ -320,10 +320,24 @@ function byD(q){
       }
     });
     DB.tvf.forEach(function(r){
-      var d=(cv(r,'رقم الجهاز')||'').trim();
-      if(d&&d.toLowerCase().indexOf(ql)===0&&!seen[d.toUpperCase()]){
+      // بحث في كل قيم الصف عن رقم الجهاز
+      var d='';
+      Object.values(r).forEach(function(val){
+        val=(val||'').trim();
+        if(!d && val && val.toLowerCase().indexOf(ql)===0 && val.length>4 && /^[a-z]{2}/i.test(val)){
+          d=val;
+        }
+      });
+      if(d&&!seen[d.toUpperCase()]){
         seen[d.toUpperCase()]=true;
-        matched.push({dev:d,name:cv(r,'اسم الوظف'),sim:cv(r,'رقم السم كارت'),date:cv(r,'Timestamp'),status:cv(r,'اخراج صيانة'),src:'TVF',row:r});
+        // اسم الموظف هو العمود الثالث
+        var tech=cv(r,'اسم الوظف')||'';
+        var sim=cv(r,'رقم السم كارت')||'';
+        var date=cv(r,'Timestamp')||'';
+        var op=cv(r,'توزيع /راجاع')||'';
+        var note=cv(r,'ملاحظة')||'';
+        var pulled=cv(r,'اخراج صيانة')||'';
+        matched.push({dev:d,name:tech,sim:sim,date:date,status:op+(pulled?' | '+pulled:''),src:'TVF',row:r});
       }
     });
     DB.stock.forEach(function(r){
@@ -357,7 +371,13 @@ function byD(q){
   } else {
     // بحث بجهاز محدد
     var dt=DB.dash.filter(function(r){var d=nd(cv(r,'رقم جهاز POS'));return d&&d.length>4&&(d.includes(nd(ql))||nd(ql).includes(d.substring(0,8)));}).sort(function(a,b){return pd(cv(b,'submittedAt'))-pd(cv(a,'submittedAt'));});
-    var tt=DB.tvf.filter(function(r){var d=nd(cv(r,'رقم الجهاز'));return d&&d.length>4&&(d.includes(nd(ql))||nd(ql).includes(d.substring(0,8)));}).sort(function(a,b){return pd(cv(b,'Timestamp'))-pd(cv(a,'Timestamp'));});
+    var tt=DB.tvf.filter(function(r){
+    // بحث في كل الأعمدة
+    return Object.values(r).some(function(val){
+      val=nd(val||'');
+      return val&&val.length>4&&/^[a-z]{2}/i.test(val||'')&&(val.includes(nd(ql))||nd(ql).includes(val.substring(0,8)));
+    });
+  }).sort(function(a,b){return pd(cv(b,'Timestamp'))-pd(cv(a,'Timestamp'));});
     var st=DB.stock.filter(function(r){var v=nd(cv(r,'vs','VS'));return v&&v.length>4&&(v.includes(nd(ql))||nd(ql).includes(v.substring(0,8)));});
     if(!dt.length&&!tt.length&&!st.length){noRes(q);return;}
     var si=[];
