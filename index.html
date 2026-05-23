@@ -1133,21 +1133,24 @@ if('serviceWorker' in navigator){
 var AUTH_DONE = false;
 
 function LP() {
-  var val = (document.getElementById('PI') || {}).value || '';
-  var correct = atob('MTAwMjAwMjA=');
-  if (val === correct) {
-    AUTH_DONE = true;
-    var ls = document.getElementById('LS');
-    if (ls) ls.style.display = 'none';
-    var app = document.getElementById('APP');
-    if (app) app.style.display = 'block';
+  var val = document.getElementById('PI').value;
+  // Check password using char codes
+  var ok = [49,48,48,50,48,48,50,48];
+  var match = val.length === ok.length;
+  if (match) {
+    for (var i = 0; i < ok.length; i++) {
+      if (val.charCodeAt(i) !== ok[i]) { match = false; break; }
+    }
+  }
+  if (match) {
+    document.getElementById('LS').style.display = 'none';
+    document.getElementById('APP').style.display = 'block';
     try { sessionStorage.setItem('POS_OK', '1'); } catch(e) {}
-    loadAll();
+    if (!loaded) loadAll();
   } else {
-    var err = document.getElementById('PE');
-    if (err) { err.style.display = 'block'; }
-    var inp = document.getElementById('PI');
-    if (inp) { inp.value = ''; inp.focus(); }
+    document.getElementById('PE').style.display = 'block';
+    document.getElementById('PI').value = '';
+    document.getElementById('PI').focus();
   }
 }
 
@@ -1155,7 +1158,6 @@ function LP() {
 (function() {
   try {
     if (sessionStorage.getItem('POS_OK') === '1') {
-      AUTH_DONE = true;
       var ls = document.getElementById('LS');
       if (ls) ls.style.display = 'none';
       var app = document.getElementById('APP');
