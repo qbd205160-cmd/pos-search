@@ -1094,7 +1094,7 @@ function checkPass(){
 }
 
 // Auto-login if session exists
-(function(){
+window.addEventListener('DOMContentLoaded', function(){
   try{
     if(sessionStorage.getItem('pos_auth')==='1'){
       var ls=document.getElementById('loginScreen');
@@ -1102,7 +1102,7 @@ function checkPass(){
       loadAll();
     }
   }catch(e){}
-})();
+});
 
 // ── Install app ──────────────────────────────────────────────
 function installApp(){
