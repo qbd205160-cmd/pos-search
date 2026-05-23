@@ -877,6 +877,208 @@ function tgl(btn,id){var l=document.getElementById(id);if(!l)return;if(l.style.d
 function noRes(q){document.getElementById('res').innerHTML='<div class="empty"><div style="font-size:38px;margin-bottom:8px">🔍</div><div style="color:#475569;font-size:13px">لا نتائج لـ "<span style="color:#60a5fa">'+q+'</span>"</div><div style="color:#334155;font-size:11px;margin-top:5px">جرب كتابة جزء من الاسم أو رقم الجهاز كاملاً</div></div>';}
 function showLoad(v){document.getElementById('lb').className='lbar'+(v?' on':'');document.getElementById('sbtn').disabled=v;document.getElementById('sbtn').innerHTML=v?'<span class="sp"></span>جاري...':'🔍 بحث';}
 
+// ── Reports ──────────────────────────────────────────────────
+var repData=[];
+
+function showReports(){
+  // Hide main search
+  document.getElementById('res').style.display='none';
+  document.querySelector('.sbar').style.display='none';
+  document.getElementById('reportsPage').style.display='block';
+  // Update active button
+  ['br','bd','bs','brep'].forEach(function(x){document.getElementById(x).classList.remove('on');});
+  document.getElementById('brep').classList.add('on');
+  // Build filter options
+  buildFilterOptions();
+  // Load all data
+  applyFilters();
+}
+
+function hideReports(){
+  document.getElementById('reportsPage').style.display='none';
+  document.getElementById('res').style.display='block';
+  document.querySelector('.sbar').style.display='block';
+}
+
+function buildFilterOptions(){
+  // Build unique values for filters
+  var techs=new Set(),areas=new Set(),reasons=new Set(),apps=new Set();
+  DB.dash.forEach(function(r){
+    var t=cv(r,'اسم الموظف المسؤول');if(t&&t.length>1)techs.add(t);
+    var a=cv(r,'العنوان');
+    if(a){
+      // Extract area from address (first word usually)
+      var parts=a.split(' ');
+      if(parts.length>1&&parts[0].length>2)areas.add(parts[0]+' '+parts[1]);
+      else if(parts[0].length>2)areas.add(parts[0]);
+    }
+    var rs=cv(r,'سبب الزيارة');if(rs&&rs.length>1)reasons.add(rs);
+    var ap=cv(r,'منافس');if(ap&&ap!=='—'&&ap.length>1)ap.split(',').forEach(function(x){if(x.trim())apps.add(x.trim());});
+  });
+  
+  function fillSelect(id,values){
+    var sel=document.getElementById(id);
+    var cur=sel.value;
+    sel.innerHTML='<option value="">الكل</option>';
+    Array.from(values).sort().forEach(function(v){
+      sel.innerHTML+='<option value="'+v+'">'+v+'</option>';
+    });
+    sel.value=cur;
+  }
+  
+  fillSelect('repTech',techs);
+  fillSelect('repArea',areas);
+  fillSelect('repReason',reasons);
+  fillSelect('repApp',apps);
+}
+
+function applyFilters(){
+  if(!loaded)return;
+  
+  var status=document.getElementById('repStatus').value;
+  var tech=document.getElementById('repTech').value;
+  var area=document.getElementById('repArea').value;
+  var reason=document.getElementById('repReason').value;
+  var app=document.getElementById('repApp').value;
+  var simSt=document.getElementById('repSimSt').value;
+  var fromDate=document.getElementById('repFrom').value;
+  var toDate=document.getElementById('repTo').value;
+  var search=(document.getElementById('repSearch').value||'').toLowerCase();
+  
+  // Get latest task per restaurant
+  var byRest={};
+  DB.dash.forEach(function(r){
+    var name=cv(r,'اسم المطعم');
+    if(!name)return;
+    if(!byRest[name]||pd(cv(r,'submittedAt'))>pd(cv(byRest[name],'submittedAt'))){
+      byRest[name]=r;
+    }
+  });
+  
+  var rows=Object.values(byRest);
+  
+  // Apply filters
+  rows=rows.filter(function(r){
+    if(status&&cv(r,'status')!==status)return false;
+    if(tech&&cv(r,'اسم الموظف المسؤول')!==tech)return false;
+    if(area&&!cv(r,'العنوان').includes(area))return false;
+    if(reason&&cv(r,'سبب الزيارة')!==reason)return false;
+    if(app&&!cv(r,'منافس').includes(app))return false;
+    if(simSt&&cv(r,'حالة SIM')!==simSt)return false;
+    if(fromDate){var d=pd(cv(r,'submittedAt'));if(d<new Date(fromDate))return false;}
+    if(toDate){var d=pd(cv(r,'submittedAt'));if(d>new Date(toDate+'T23:59:59'))return false;}
+    if(search){
+      var all=Object.values(r).join(' ').toLowerCase();
+      if(!all.includes(search))return false;
+    }
+    return true;
+  });
+  
+  // Sort newest first
+  rows.sort(function(a,b){return pd(cv(b,'submittedAt'))-pd(cv(a,'submittedAt'));});
+  
+  repData=rows;
+  renderReportStats(rows);
+  renderReportTable(rows);
+}
+
+function renderReportStats(rows){
+  var stats={total:rows.length,active:0,waiting:0,new_:0,done:0};
+  rows.forEach(function(r){
+    var s=cv(r,'status');
+    if(s==='نشط')stats.active++;
+    else if(s==='انتظار')stats.waiting++;
+    else if(s==='جديد')stats.new_++;
+    else if(s==='مكتمل')stats.done++;
+  });
+  
+  var h='';
+  h+=statCard('📊','إجمالي',stats.total,'#60a5fa');
+  h+=statCard('✅','نشط',stats.active,'#4ade80');
+  h+=statCard('⏳','انتظار',stats.waiting,'#fbbf24');
+  h+=statCard('🆕','جديد',stats.new_,'#93c5fd');
+  h+=statCard('✔️','مكتمل',stats.done,'#86efac');
+  document.getElementById('repStats').innerHTML=h;
+}
+
+function statCard(ico,lbl,val,color){
+  return'<div style="background:#0d1424;border:1px solid #1e293b;border-radius:9px;padding:10px 12px;text-align:center">'
+    +'<div style="font-size:18px">'+ico+'</div>'
+    +'<div style="font-size:20px;font-weight:900;color:'+color+'">'+val+'</div>'
+    +'<div style="font-size:10px;color:#475569">'+lbl+'</div>'
+    +'</div>';
+}
+
+function renderReportTable(rows){
+  if(!rows.length){
+    document.getElementById('repResults').innerHTML='<div class="empty"><div style="font-size:36px;margin-bottom:8px">📋</div><div style="color:#475569">لا توجد نتائج بهذه الفلاتر</div></div>';
+    return;
+  }
+  
+  var h='<div style="font-size:11px;color:#475569;margin-bottom:8px">'+rows.length+' مطعم</div>';
+  
+  rows.forEach(function(r,i){
+    var name=cv(r,'اسم المطعم');
+    var dev=cv(r,'رقم جهاز POS');
+    var sim=cv(r,'رقم SIM كارت POS');
+    var status=cv(r,'status');
+    var date=cv(r,'submittedAt');
+    var tech=cv(r,'اسم الموظف المسؤول');
+    var addr=cv(r,'العنوان');
+    var reason=cv(r,'سبب الزيارة');
+    var simst=cv(r,'حالة SIM');
+    var apps=cv(r,'منافس');
+    var note=cv(r,'ملاحظات');
+    var id=cv(r,'id');
+    
+    h+='<div class="hi" style="margin-bottom:7px;cursor:pointer" onclick="this.querySelector('.rep-detail').style.display=this.querySelector('.rep-detail').style.display==='none'?'block':'none'">'
+     +'<div class="hr">'
+     +'<span style="font-size:11px;color:#334155;min-width:24px">'+( i+1)+'</span>'
+     +'<span style="font-size:13px;font-weight:700;color:#e2e8f0;flex:1">'+name+'</span>'
+     +(dev&&['1','2','3'].indexOf(dev)<0?'<span style="font-size:10px;color:#60a5fa">🖥️ '+dev+'</span>':'')
+     +'<span class="bdg '+scBdg(status)+'">'+status+'</span>'
+     +'</div>'
+     +'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">'
+     +(addr?'<span style="font-size:10px;color:#475569">📍 '+addr+'</span>':'')
+     +(date?'<span style="font-size:10px;color:#475569">📅 '+date+'</span>':'')
+     +(tech?'<span style="font-size:10px;color:#475569">👤 '+tech+'</span>':'')
+     +'</div>'
+     +'<div class="rep-detail" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid #1e293b">'
+     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">'
+     +(reason?'<div><span style="color:#475569">🔧 </span><span style="color:#7dd3fc">'+reason+'</span></div>':'')
+     +(sim&&sim.length>5?'<div><span style="color:#475569">📶 </span><span style="color:#fb923c">'+sim+'</span></div>':'')
+     +(simst?'<div><span style="color:#475569">📡 </span><span style="color:'+(simst==='4G'?'#4ade80':'#f87171')+'">'+simst+'</span></div>':'')
+     +(apps&&apps!=='—'?'<div><span style="color:#475569">📱 </span><span style="color:#c4b5fd">'+apps+'</span></div>':'')
+     +(id?'<div style="grid-column:1/-1"><span style="color:#334155">🆔 '+id+'</span></div>':'')
+     +(note&&note!=='—'?'<div style="grid-column:1/-1"><span style="color:#475569">📝 </span><span style="color:#94a3b8">'+note+'</span></div>':'')
+     +'</div></div>'
+     +'</div>';
+  });
+  
+  document.getElementById('repResults').innerHTML=h;
+}
+
+function resetFilters(){
+  ['repStatus','repTech','repArea','repReason','repApp','repSimSt'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('repFrom').value='';
+  document.getElementById('repTo').value='';
+  document.getElementById('repSearch').value='';
+  applyFilters();
+}
+
+function exportReport(){
+  if(!repData.length)return;
+  var rows=[['اسم المطعم','رقم الجهاز','رقم السيم','العنوان','الحالة','سبب الزيارة','حالة السيم','الفني','آخر تاسك','المنافسين','ملاحظات','ID']];
+  repData.forEach(function(r){
+    rows.push([
+      cv(r,'اسم المطعم'),cv(r,'رقم جهاز POS'),cv(r,'رقم SIM كارت POS'),
+      cv(r,'العنوان'),cv(r,'status'),cv(r,'سبب الزيارة'),cv(r,'حالة SIM'),
+      cv(r,'اسم الموظف المسؤول'),cv(r,'submittedAt'),cv(r,'منافس'),cv(r,'ملاحظات'),cv(r,'id')
+    ]);
+  });
+  downloadCSV(rows,'تقرير_المطاعم_'+new Date().toLocaleDateString('ar')+'.csv');
+}
+
 // ── Login ─────────────────────────────────────────────────────
 function checkPass(){
   var input=document.getElementById('passInput').value;
