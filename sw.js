@@ -1,1 +1,0 @@
-self.addEventListener('install',function(e){self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(n){return Promise.all(n.map(function(k){return caches.delete(k);}));}));self.clients.claim();});self.addEventListener('fetch',function(e){});
