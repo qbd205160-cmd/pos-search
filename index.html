@@ -256,7 +256,8 @@ function buildDeviceDB(){
 function findDevInRow(r){
   var dev='';
   Object.values(r).forEach(function(v){
-    v=(v||'').trim();
+    if(v===null||v===undefined)return;
+    v=String(v).trim();
     if(!dev&&v.length>4&&/^v[bse]/i.test(v))dev=v;
   });
   return dev;
@@ -495,7 +496,7 @@ function searchByName(q){
 
 // ── Render ────────────────────────────────────────────────────
 function sf(ico,lbl,val,cls,vc){
-  if(!val||['1','2','3','9','—','//'].indexOf((val||'').trim())>=0||(val||'').trim().length<=1)return'';
+  if(!val||['1','2','3','9','—','//'].indexOf(String(val||'').trim())>=0||String(val||'').trim().length<=1)return'';
   return'<div class="sf '+(cls||'')+'"><div class="sf-lbl">'+ico+' '+lbl+'</div><div class="sf-val '+(vc||'')+'">'+val+'</div></div>';
 }
 
