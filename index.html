@@ -78,8 +78,24 @@ body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction
 </style>
 </head>
 <body>
-
 <!-- Login Screen -->
+<div id="LS" style="position:fixed;inset:0;background:#07090f;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#0d1424;border:1px solid #1e3a5f;border-radius:16px;padding:32px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.8)">
+    <div style="font-size:48px;margin-bottom:14px">🖨️</div>
+    <div style="font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:4px">نظام تتبع أجهزة POS</div>
+    <div style="font-size:11px;color:#475569;margin-bottom:24px">أدخل كلمة المرور للمتابعة</div>
+    <input id="PI" type="password" placeholder="كلمة المرور"
+      style="width:100%;padding:13px 16px;border-radius:9px;background:#060a12;border:1px solid #1e3a5f;color:#e2e8f0;font-size:16px;outline:none;text-align:center;margin-bottom:12px;direction:ltr;letter-spacing:3px"
+      onkeydown="if(event.key==='Enter')LP()"/>
+    <button onclick="LP()"
+      style="width:100%;padding:13px;border-radius:9px;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;box-shadow:0 0 20px rgba(59,130,246,.4)">
+      دخول
+    </button>
+    <div id="PE" style="color:#f87171;font-size:12px;margin-top:10px;display:none">⚠️ كلمة المرور غير صحيحة</div>
+  </div>
+</div>
+
+
 <div id="loginScreen" style="position:fixed;inset:0;background:#07090f;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
   <div style="background:#0d1424;border:1px solid #1e3a5f;border-radius:16px;padding:32px 24px;max-width:340px;width:100%;text-align:center">
     <div style="font-size:44px;margin-bottom:12px">🖨️</div>
@@ -1080,29 +1096,24 @@ function exportReport(){
 }
 
 // ── Login ─────────────────────────────────────────────────────
-function checkPass(){
-  var input=document.getElementById('passInput').value;
-  if(input===atob('MTAwMjAwMjA=')){
-    document.getElementById('loginScreen').style.display='none';
-    try{sessionStorage.setItem('pos_auth','1');}catch(e){}
-    loadAll();
-  } else {
-    document.getElementById('passErr').style.display='block';
-    document.getElementById('passInput').value='';
-    document.getElementById('passInput').focus();
+var _P=atob('MTAwMjAwMjA=');
+function LP(){
+  var v=document.getElementById('PI').value;
+  if(v===_P){
+    document.getElementById('LS').style.display='none';
+    document.getElementById('PE').style.display='none';
+    try{sessionStorage.setItem('A','1');}catch(e){}
+    if(!loaded)loadAll();
+  }else{
+    document.getElementById('PE').style.display='block';
+    document.getElementById('PI').value='';
+    document.getElementById('PI').focus();
   }
 }
-
-// Auto-login if session exists
-window.addEventListener('DOMContentLoaded', function(){
-  try{
-    if(sessionStorage.getItem('pos_auth')==='1'){
-      var ls=document.getElementById('loginScreen');
-      if(ls)ls.style.display='none';
-      loadAll();
-    }
-  }catch(e){}
-});
+// Auto-login check
+(function(){
+  try{if(sessionStorage.getItem('A')==='1'){document.getElementById('LS').style.display='none';}}catch(e){}
+})();
 
 // ── Install app ──────────────────────────────────────────────
 function installApp(){
