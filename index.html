@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#07090f">
-<link rel="manifest" href="manifest.json">
 <title>POS Tracker</title>
 <style>
+
 
 
 
@@ -77,10 +77,11 @@ body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction
 
 
 
+
 </style>
 </head>
 <body>
-</div>
+
 <script>
 var DASH='1TnlxGwD0G6FV654bFCbXmjL4Ek59IGJWkAYYlb_GD7w';
 var TVF_ID='11iL-WTrWcw9hSn5YD6i1LvLnczMrFu0HInjXmBUCFmo';
@@ -1046,29 +1047,6 @@ function installApp(){
 }
 
 // ── PWA Install ─────────────────────────────────────────────────
-var deferredPrompt;
-window.addEventListener('beforeinstallprompt',function(e){
-  e.preventDefault();deferredPrompt=e;
-  document.getElementById('installBtn').style.display='flex';
-});
-window.addEventListener('appinstalled',function(){
-  document.getElementById('installBtn').style.display='none';
-});
-
-// ── Service Worker ────────────────────────────────────────────
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').then(function(reg){
-    console.log('SW registered');
-  }).catch(function(e){console.log('SW error',e);});
-}
-
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-
-var deferredPrompt;
-window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredPrompt=e;});
-function installApp(){if(deferredPrompt){deferredPrompt.prompt();}}
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-
 loadAll();
 </script>
 </body>
