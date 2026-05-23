@@ -97,54 +97,6 @@ body{background:#07090f;color:#e2e8f0;font-family:'Tajawal',sans-serif;direction
 
 <!-- التطبيق الرئيسي -->
 <div id="APP" style="display:none">
-<div id="loginScreen" style="position:fixed;inset:0;background:#07090f;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#0d1424;border:1px solid #1e3a5f;border-radius:16px;padding:32px 24px;max-width:340px;width:100%;text-align:center">
-    <div style="font-size:44px;margin-bottom:12px">🖨️</div>
-    <div style="font-size:18px;font-weight:800;color:#f1f5f9;margin-bottom:6px">نظام تتبع أجهزة POS</div>
-    <div style="font-size:11px;color:#475569;margin-bottom:24px">أدخل كلمة المرور للمتابعة</div>
-    <input id="passInput" type="password" placeholder="كلمة المرور" 
-      style="width:100%;padding:12px 16px;border-radius:9px;background:#060a12;border:1px solid #1e3a5f;color:#e2e8f0;font-size:15px;outline:none;font-family:'Tajawal',sans-serif;text-align:center;margin-bottom:12px;direction:ltr"
-      onkeydown="if(event.key==='Enter')checkPass()"/>
-    <button onclick="checkPass()" 
-      style="width:100%;padding:12px;border-radius:9px;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif">
-      دخول
-    </button>
-    <div id="passErr" style="color:#f87171;font-size:12px;margin-top:10px;display:none">كلمة المرور غير صحيحة</div>
-  </div>
-</div>
-<div class="hdr">
-  <div class="logo">🖨</div>
-  <div><div class="htitle">نظام تتبع أجهزة POS</div><div class="hsub">dashboard · TVF · stock · sim55</div></div>
-  <button id="installBtn" onclick="installApp()" style="display:none;padding:7px 14px;border-radius:8px;background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.4);color:#93c5fd;font-size:11px;cursor:pointer;font-family:'Tajawal',sans-serif;align-items:center;gap:5px;margin-right:auto">📲 تثبيت التطبيق</button>
-</div>
-<div class="wrap">
-  <div class="stbar">
-    <div class="dot ld" id="stDot"></div>
-    <span id="stMsg">جاري تحميل البيانات...</span>
-    <button onclick="loadAll()" style="margin-right:auto;padding:3px 9px;border-radius:5px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:#60a5fa;font-size:10px;cursor:pointer;font-family:'Tajawal',sans-serif">🔄 تحديث</button>
-  </div>
-  <div class="sbar">
-    <div class="slabel" id="slbl">🔍 ابحث بأي شيء — اسم مطعم، رقم جهاز، سيم، ملاحظة...</div>
-    <div class="srow">
-      <input class="sinput" id="si" placeholder="مثال: فولكينو | VS | VB53221 | 7873890..." onkeydown="if(event.key==='Enter')go()"/>
-      <button class="sbtn" id="sbtn" onclick="go()">🔍 بحث</button>
-      <button class="xbtn" onclick="document.getElementById('si').value='';document.getElementById('si').focus()">✕</button>
-    </div>
-    <div class="lbar" id="lb"><span class="sp"></span><span id="lmsg">جاري البحث...</span></div>
-  </div>
-  <div id="res">
-    <div class="hint">
-      <strong style="color:#60a5fa">أمثلة على البحث:</strong><br>
-      🏪 اسم مطعم: <span style="color:#e2e8f0">فولكينو</span> أو <span style="color:#e2e8f0">هاديز</span><br>
-      🖥️ كل أجهزة VS: <span style="color:#e2e8f0">VS</span> &nbsp;|&nbsp; كل أجهزة VB: <span style="color:#e2e8f0">VB</span> &nbsp;|&nbsp; كل أجهزة VE: <span style="color:#e2e8f0">VE</span><br>
-      🔢 جهاز محدد: <span style="color:#e2e8f0">VB53221C20316</span><br>
-      📶 رقم سيم: <span style="color:#e2e8f0">7873890544</span><br>
-      🔢 ICCID: <span style="color:#e2e8f0">008857254475</span> ← يحوله تلقائياً لرقم السيم
-    </div>
-  </div>
-</div>
-</div>
-
 <script>
 var DASH='1TnlxGwD0G6FV654bFCbXmjL4Ek59IGJWkAYYlb_GD7w';
 var TVF_ID='11iL-WTrWcw9hSn5YD6i1LvLnczMrFu0HInjXmBUCFmo';
